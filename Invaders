@@ -1,0 +1,259 @@
+-- tutorial #2
+-- added enemys, shooting, background etc.
+
+function love.load()
+	bg = love.graphics.newImage("bg.png")
+  math.randomseed(os.time())
+	
+	hero = {} -- new table for the hero
+	hero.x = 300	-- x,y coordinates of the hero
+	hero.y = 450
+	hero.width = 30
+	hero.height = 15
+	hero.speed = 300
+	hero.shots = {} -- holds our fired shots
+  hero.score = 0
+  hero.cooldownMax = 2
+  hero.cooldown = 1
+  hero.superCharge = 0
+  hero.superChargeMax = 50
+	
+	enemies = {}
+  	
+	for i=0,7 do
+		enemy = {}
+		enemy.width = 40
+		enemy.height = 20
+		enemy.x = i * (enemy.width + 60) + 100
+		enemy.y = 20
+    enemy.speed = 30
+    enemy.name = "blue"
+		table.insert(enemies, enemy)
+	end
+  
+  	for i=0,7 do
+		enemy = {}
+		enemy.width = 40
+		enemy.height = 20
+		enemy.x = i * (enemy.width + 60) + 100
+		enemy.y = 60
+    enemy.speed = 40
+    enemy.name = "purple"
+		table.insert(enemies, enemy)
+	end
+  
+end
+
+function love.keyreleased(key)
+	if (key == "x") then
+		shoot()
+	end
+  	if (key == "z") then
+		shootMissile()
+	end
+end
+
+function love.update(dt)
+	-- keyboard actions for our hero
+	if love.keyboard.isDown("left") then
+		hero.x = hero.x - hero.speed*dt
+	elseif love.keyboard.isDown("right") then
+		hero.x = hero.x + hero.speed*dt
+	end
+  
+  if (hero.cooldown > 0) then
+    hero.cooldown = hero.cooldown - dt
+  end
+	
+	local remEnemy = {}
+	local remShot = {}
+	
+	-- update the shots
+	for i,v in ipairs(hero.shots) do
+	
+		-- move them up up up
+		v.y = v.y - dt * v.speed
+		
+		-- mark shots that are not visible for removal
+		if v.y < 0 then
+			table.insert(remShot, i)
+		end
+		
+		-- check for collision with enemies
+		for ii,vv in ipairs(enemies) do
+			if CheckCollision(v.x,v.y,v.width,v.height,vv.x,vv.y,vv.width,vv.height) then
+				
+				-- mark that enemy for removal
+				table.insert(remEnemy, ii)
+        SpawnRandomEnemy()
+        hero.score = hero.score + 1
+        hero.superCharge = hero.superCharge + 1
+				-- mark the shot to be removed
+        if (v.health == 1) then
+          table.insert(remShot, i)
+        else
+          v.health = v.health - 1
+        end
+				
+			end
+		end		
+	end	
+	
+	-- remove the marked enemies
+	for i,v in ipairs(remEnemy) do
+		table.remove(enemies, v)    
+	end
+	
+	for i,v in ipairs(remShot) do
+		table.remove(hero.shots, v)
+	end
+	
+	
+	
+	-- update those evil enemies
+	for i,v in ipairs(enemies) do
+		-- let them fall down slowly
+		v.y = v.y + dt * v.speed
+		
+		-- check for collision with ground
+		if v.y > 465 then
+			-- you loose!!!
+		end
+		
+	end
+	
+end
+
+
+function love.draw()
+	-- let's draw a background
+	love.graphics.setColor(255,255,255,255)
+	love.graphics.draw(bg)
+  
+
+	-- let's draw some ground
+	love.graphics.setColor(0,255,0,255)
+	love.graphics.rectangle("fill", 0, 465, 800, 150)
+	
+	-- let's draw our hero
+	love.graphics.setColor(255,255,0,255)
+	love.graphics.rectangle("fill", hero.x, hero.y, hero.width, hero.height)
+	
+	-- let's draw our heros shots
+	love.graphics.setColor(255,255,255,255)
+	for i,v in ipairs(hero.shots) do
+    
+    if (v.name == "missile") then
+      love.graphics.setColor(255,0,0,255)
+    end
+    
+		love.graphics.rectangle("fill", v.x, v.y, v.width, v.height)    
+    love.graphics.setColor(255,255,255,255)
+	end
+	-- let's draw our enemies
+	love.graphics.setColor(0,255,255,255)
+	for i,v in ipairs(enemies) do
+    if (v.name == "purple") then
+      love.graphics.setColor(255,0,255,255)
+    end
+		love.graphics.rectangle("fill", v.x, v.y, v.width, v.height)
+    love.graphics.setColor(0,255,255,255)
+	end
+  --let's draw some text
+  love.graphics.setColor(255,0,0,255)
+  love.graphics.print(hero.score, 700, 20, 0, 2, 2)
+  love.graphics.print(hero.superCharge, 650, 20, 0, 2, 2)
+  
+end
+
+function shoot()
+	
+	local shot = {}
+	shot.x = hero.x+hero.width
+	shot.y = hero.y
+  shot.width = 2
+  shot.height = 5
+  shot.speed = 300
+  shot.health = 1
+  shot.name = "shot"
+  	
+	table.insert(hero.shots, shot)	
+  
+  local shot2 = {}
+	shot2.x = hero.x
+	shot2.y = hero.y
+  shot2.width = 2
+  shot2.height = 5
+  shot2.speed = 300
+  shot2.health = 1
+  shot2.name = "shot"
+  
+  table.insert(hero.shots, shot2)	
+end
+
+function shootMissile()
+	if (hero.cooldown <= 0) then
+    local shot = {}
+    shot.x = hero.x+hero.width/2
+    shot.y = hero.y
+    shot.width = 6
+    shot.height = 10
+    shot.speed = 500
+    shot.health = 5
+    shot.name = "missile"
+  	
+    table.insert(hero.shots, shot)	
+    hero.cooldown = hero.cooldownMax
+  end
+  
+end
+
+function SpawnRandomEnemy()
+  
+		enemy = {}
+		enemy.width = 40
+		enemy.height = 20	
+    enemy.x = 20 + love.math.random(740)
+    enemy.y = 20 + love.math.random(100)  
+    
+    if (love.math.random(2) == 1) then
+      enemy.name = "blue"
+      enemy.speed = 30
+      
+    else
+      enemy.name = "purple"
+      enemy.speed = 40
+    end
+    
+    
+    local collided = 1
+    
+    while (collided == 1)
+    do
+      collided = 0
+      
+      for i,v in ipairs(enemies) do
+        
+        if CheckCollision(v.x,v.y,40,20,enemy.x,enemy.y,enemy.width,enemy.height) then          
+          collided = 1  
+        end      
+        
+      end
+      
+      if (collided == 1) then
+          enemy.x = 20 + love.math.random(740)
+          enemy.y = 20 + love.math.random(100) 
+      end
+    end    
+    
+		table.insert(enemies, enemy)   
+      
+end
+-- Collision detection function.
+-- Checks if a and b overlap.
+-- w and h mean width and height.
+function CheckCollision(ax1,ay1,aw,ah, bx1,by1,bw,bh)
+
+  local ax2,ay2,bx2,by2 = ax1 + aw, ay1 + ah, bx1 + bw, by1 + bh
+  return ax1 < bx2 and ax2 > bx1 and ay1 < by2 and ay2 > by1
+end
