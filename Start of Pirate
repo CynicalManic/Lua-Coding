@@ -1,0 +1,80 @@
+
+function love.load()
+  
+  background= love.graphics.newImage("sprites/bg.png")
+  backgroundQuad = love.graphics.newQuad(1,1,720/2,1280/2,720/2,1280/2)
+  
+  flappy = love.graphics.newImage("sprites/flappy.png")
+  flappyPosY = 200
+  
+  pipe = love.graphics.newImage("sprites/pipe.png")
+  pipePosX = 300
+  
+  playerShip = {}
+	playerShip.x = 0	-- x,y coordinates of the hero
+	playerShip.y = 450
+	playerShip.width = 15
+	playerShip.height = 15
+	playerShip.speed = 300
+  playerShip.speedSetting = 0
+  playerShip.rotation = 0
+  
+  
+end
+
+function love.update(dt)
+  
+  shipUpdate(dt)  
+end
+
+function shipUpdate(dt)
+  
+  playerShipUpdate(dt)
+end
+
+function playerShipUpdate(dt)
+  
+	if love.keyboard.isDown("a") then
+		playerShip.rotation = playerShip.rotation + 0.01
+  end
+  if love.keyboard.isDown("d") then
+		playerShip.rotation = playerShip.rotation - 0.01
+  end
+  
+  playerShip.x, playerShip.y = angledShipMovement(playerShip.x, playerShip.y, playerShip.speed, playerShip.rotation, dt)
+end
+
+function angledShipMovement(posx, posy, speed, rotation, dt)
+  
+  posx = posx + (math.cos(rotation) * dt * 50)
+  posy = posy - (math.sin(rotation) * dt * 50)
+  return posx, posy
+end
+
+function love.draw()
+  love.graphics.draw(background, backgroundQuad, 0, 0)
+  game_screen()
+end
+
+function love.keyreleased(key)
+	if (key == "w") then
+      
+	end
+end
+
+function game_screen()
+  love.graphics.draw(pipe, pipePosX, 500)
+  love.graphics.draw(flappy, playerShip.x, playerShip.y)  
+
+end
+
+function flap()
+  flappyPosY = flappyPosY - 30.0
+end
+
+function CheckCollision(x1,y1,w1,h1, x2,y2,w2,h2)
+  return x1 < x2+w2 and
+         x2 < x1+w1 and
+         y1 < y2+h2 and
+         y2 < y1+h1
+end
