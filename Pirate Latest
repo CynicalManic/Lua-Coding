@@ -1,0 +1,142 @@
+function love.load()
+  
+  background= love.graphics.newImage("sprites/bg.png")
+  backgroundQuad = love.graphics.newQuad(1,1,2500/2,2000/2,720/2,1280/2)
+  
+  redPlayerImage = love.graphics.newImage("sprites/RedShip.png")
+  asteroidImage = love.graphics.newImage("sprites/Asteroid.png")  
+  
+  redPlayerShip = {}
+	redPlayerShip.x = 600	-- x,y coordinates of the hero
+	redPlayerShip.y = 900
+	redPlayerShip.width = 45
+	redPlayerShip.height = 45
+	redPlayerShip.speed = 300
+  redPlayerShip.speedSetting = 3
+  redPlayerShip.speedSettingValue = {-50,10,50,100,150}
+  redPlayerShip.rotationSpeed = 1
+  redPlayerShip.rotation = 0 
+  
+  bluePlayerShip = {}
+	bluePlayerShip.x = 600	-- x,y coordinates of the hero
+	bluePlayerShip.y = 900
+	bluePlayerShip.width = 45
+	bluePlayerShip.height = 45
+	bluePlayerShip.speed = 300
+  bluePlayerShip.speedSetting = 3
+  bluePlayerShip.speedSettingValue = {-50,10,50,100,150}
+  bluePlayerShip.rotationSpeed = 1
+  bluePlayerShip.rotation = 0 
+  
+  terrainAsteroid = {}
+  terrainAsteroid.width = 45
+  terrainAsteroid.height = 45
+  terrainAsteroid.x = 200
+  terrainAsteroid.y = 200
+  terrainAsteroid.rotation = 0
+  terrainAsteroid.rotationSpeed = 1
+  terrainAsteroid.speed = 0  
+  
+  astArray = {}          -- create the matrix
+    for i=1,N do
+      mt[i] = {}     -- create a new row
+      for j=1,M do
+        mt[i][j] = 0
+    end
+  end
+  
+  asteroidCount = 5
+  for i = 1, asteroidCount, 1
+  do
+    
+  end
+end
+
+function love.update(dt)
+  
+  shipUpdate(dt)  
+  terrainUpdate(dt)
+end
+
+function Asteroid:create(position)
+   local acnt = {}             -- our new object
+   setmetatable(acnt,objectAsteroid)  -- make Account handle lookup
+   acnt.position = position      -- initialize our object
+   return acnt
+end
+
+function objectAsteroid:update(dt)
+  
+end
+
+function shipUpdate(dt)
+  
+  playerShipUpdate(dt)
+  enemyShipUpdate(dt)
+end
+
+function enemyShipUpdate(dt)
+
+end
+
+function terrainUpdate(dt)
+  
+end
+
+function playerShipUpdate(dt)
+  
+	if love.keyboard.isDown("d") then
+		redPlayerShip.rotation = redPlayerShip.rotation + redPlayerShip.rotationSpeed
+    
+    if redPlayerShip.rotation > 360 then
+      redPlayerShip.rotation = 1
+    end
+  end
+  if love.keyboard.isDown("a") then
+		redPlayerShip.rotation = redPlayerShip.rotation - redPlayerShip.rotationSpeed
+    
+    if redPlayerShip.rotation < 0 then
+      redPlayerShip.rotation = 359
+    end
+  end
+  
+  redPlayerShip.x, redPlayerShip.y = angledShipMovement(redPlayerShip.x, redPlayerShip.y, redPlayerShip.speed, redPlayerShip.rotation, dt)
+end
+
+function angledShipMovement(posx, posy, speed, rotation, dt)
+  
+  rotation = rotation / 180
+  rotation = rotation * 3.14
+  posy = posy - (math.cos(rotation) * dt * redPlayerShip.speedSettingValue[redPlayerShip.speedSetting])
+  posx = posx + (math.sin(rotation) * dt * redPlayerShip.speedSettingValue[redPlayerShip.speedSetting])
+  return posx, posy
+end
+
+function love.draw()
+  love.graphics.draw(background, backgroundQuad, 0, 0)
+  game_screen()
+end
+
+function love.keyreleased(key)
+  
+	if (key == "w" and redPlayerShip.speedSetting < 5) then
+      redPlayerShip.speedSetting = redPlayerShip.speedSetting + 1
+	end
+  if (key == "s" and redPlayerShip.speedSetting > 1) then
+      redPlayerShip.speedSetting = redPlayerShip.speedSetting - 1
+	end
+end
+
+function game_screen()
+
+  love.graphics.draw(redPlayerImage, redPlayerShip.x, redPlayerShip.y, ((redPlayerShip.rotation/180)*3.14), 1, 1 ,redPlayerShip.width / 2, (redPlayerShip.height / 2))  
+  love.graphics.draw(asteroidImage, terrainAsteroid.x, terrainAsteroid.y, ((terrainAsteroid.rotation/180)*3.14), 1, 1 ,terrainAsteroid.width / 2, (terrainAsteroid.height / 2))  
+  love.graphics.print(redPlayerShip.rotation, 0, 0)
+end
+
+function CheckCollision(x1,y1,w1,h1, x2,y2,w2,h2)
+  return x1 < x2+w2 and
+         x2 < x1+w1 and
+         y1 < y2+h2 and
+         y2 < y1+h1
+end
