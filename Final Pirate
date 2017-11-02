@@ -1,0 +1,398 @@
+function love.load()
+  
+  -- Enable Physics
+  love.physics.setMeter(64) 
+  world = love.physics.newWorld(0, 0, true) 
+  world:setCallbacks(beginContact, endContact, preSolve, postSolve)
+     
+  -- Setup Background Sprite
+  background= love.graphics.newImage("sprites/bg.png")
+  backgroundQuad = love.graphics.newQuad(1,1,2500/2,2000/2,720/2,1280/2)
+  
+  -- Setup Object Sprites
+  redPlayerImage = love.graphics.newImage("sprites/RedShip.png")
+  bluePlayerImage = love.graphics.newImage("sprites/BlueShip.png")
+  asteroidImage = love.graphics.newImage("sprites/Asteroid.png")  
+  shotImage = love.graphics.newImage("sprites/Shot.png")
+  holeImage = love.graphics.newImage("sprites/Black Hole.png")
+  
+  -- Create Object Array
+  objects = {}
+  
+  -- Create and Setup Red Ship
+  objects.redShip = {}
+  objects.redShip.body = love.physics.newBody(world, 100, 900, "dynamic")
+  objects.redShip.shape = love.physics.newRectangleShape(0, 0, 70,120)
+  objects.redShip.fixture = love.physics.newFixture(objects.redShip.body, objects.redShip.shape, 1)  
+  objects.redShip.speedSettingValue = {-500,100,500,1000,1500}
+  objects.redShip.speedSetting = 2
+  objects.redShip.rotationSpeed = 0.1
+  objects.redShip.width = 70
+  objects.redShip.height = 120
+  objects.redShip.health = 3
+  objects.redShip.fixture:setUserData("red ship")
+   
+  -- Create and Setup Blue Ship
+  objects.blueShip = {}
+  objects.blueShip.body = love.physics.newBody(world, 1000, 100, "dynamic")
+  objects.blueShip.shape = love.physics.newRectangleShape(0, 0, 70,120)
+  objects.blueShip.fixture = love.physics.newFixture(objects.blueShip.body, objects.blueShip.shape, 1)
+  objects.blueShip.speedSettingValue = {-500,100,500,1000,1500}
+  objects.blueShip.speedSetting = 2
+  objects.blueShip.rotationSpeed = 0.1
+  objects.blueShip.width = 70
+  objects.blueShip.height = 120
+  objects.blueShip.health = 3
+  objects.blueShip.fixture:setUserData("blue ship")
+  
+  objects.topWall = {}
+  objects.topWall.body = love.physics.newBody(world, 0, -100)
+  objects.topWall.shape = love.physics.newRectangleShape(0,0,3000,1)
+  objects.topWall.fixture = love.physics.newFixture(objects.topWall.body, objects.topWall.shape, 1)
+  objects.topWall.fixture:setUserData("static")
+  
+  objects.leftWall = {}
+  objects.leftWall.body = love.physics.newBody(world, -100, -100)
+  objects.leftWall.shape = love.physics.newRectangleShape(0,0,1,3000)
+  objects.leftWall.fixture = love.physics.newFixture(objects.leftWall.body, objects.leftWall.shape, 1)
+  objects.leftWall.fixture:setUserData("static")
+  
+  objects.rightWall = {}
+  objects.rightWall.body = love.physics.newBody(world, 1300, 0)
+  objects.rightWall.shape = love.physics.newRectangleShape(0,0,1,3000)
+  objects.rightWall.fixture = love.physics.newFixture(objects.rightWall.body, objects.rightWall.shape, 1)
+  objects.rightWall.fixture:setUserData("static")
+  
+  objects.bottomWall = {}
+  objects.bottomWall.body = love.physics.newBody(world, 0, 1000)
+  objects.bottomWall.shape = love.physics.newRectangleShape(0,0,3000,1)
+  objects.bottomWall.fixture = love.physics.newFixture(objects.bottomWall.body, objects.bottomWall.shape, 1)
+  objects.bottomWall.fixture:setUserData("static")  
+  
+  objects.asteroid1 = {}
+  objects.asteroid1.body = love.physics.newBody(world, 200, 200, "dynamic")
+  objects.asteroid1.shape = love.physics.newCircleShape(25)
+  objects.asteroid1.fixture = love.physics.newFixture(objects.asteroid1.body, objects.asteroid1.shape, 5)
+  objects.asteroid1.width = 50
+  objects.asteroid1.height = 50
+  objects.asteroid1.rotationSpeed = 1
+  objects.asteroid1.speed = 0    
+  objects.asteroid1.fixture:setUserData("terrain")
+  
+  objects.asteroid2 = {}
+  objects.asteroid2.body = love.physics.newBody(world, 600, 700, "dynamic")
+  objects.asteroid2.shape = love.physics.newCircleShape(25)
+  objects.asteroid2.fixture = love.physics.newFixture(objects.asteroid2.body, objects.asteroid2.shape, 5)
+  objects.asteroid2.width = 50
+  objects.asteroid2.height = 50
+  objects.asteroid2.rotationSpeed = 1
+  objects.asteroid2.speed = 0    
+  objects.asteroid2.fixture:setUserData("terrain")
+  
+  objects.asteroid3 = {}
+  objects.asteroid3.body = love.physics.newBody(world, 400, 500, "dynamic")
+  objects.asteroid3.shape = love.physics.newCircleShape(25)
+  objects.asteroid3.fixture = love.physics.newFixture(objects.asteroid3.body, objects.asteroid3.shape, 5)
+  objects.asteroid3.width = 50
+  objects.asteroid3.height = 50
+  objects.asteroid3.rotationSpeed = 1
+  objects.asteroid3.speed = 0    
+  objects.asteroid3.fixture:setUserData("terrain")
+  
+  objects.shot1 = {}
+  objects.shot1.body = love.physics.newBody(world, -500, 0, "dynamic")
+  objects.shot1.shape = love.physics.newCircleShape(7)
+  objects.shot1.fixture = love.physics.newFixture(objects.shot1.body, objects.shot1.shape, 1)
+  objects.shot1.width = 25
+  objects.shot1.height = 25
+  objects.shot1.speed = 500
+  objects.shot1.duration = 3
+  objects.shot1.maxDuration  = 3
+  objects.shot1.fixture:setUserData("shot")
+  objects.shot1.body:setUserData("false")
+    
+  objects.shot2 = {}
+  objects.shot2.body = love.physics.newBody(world, -500, 0, "dynamic")
+  objects.shot2.shape = love.physics.newCircleShape(7)
+  objects.shot2.fixture = love.physics.newFixture(objects.shot2.body, objects.shot2.shape, 1)
+  objects.shot2.fixture:setUserData("shot")
+  objects.shot2.body:setUserData("false")
+  
+  objects.shot3 = {}
+  objects.shot3.body = love.physics.newBody(world, -500, 0, "dynamic")
+  objects.shot3.shape = love.physics.newCircleShape(2)
+  objects.shot3.fixture = love.physics.newFixture(objects.shot3.body, objects.shot3.shape, 1)
+  objects.shot3.fixture:setUserData("shot")
+  objects.shot3.body:setUserData("false")
+
+  objects.shot4 = {}
+  objects.shot4.body = love.physics.newBody(world, -500, 0, "dynamic")
+  objects.shot4.shape = love.physics.newCircleShape(5)
+  objects.shot4.fixture = love.physics.newFixture(objects.shot4.body, objects.shot4.shape, 1)
+  objects.shot4.fixture:setUserData("shot")
+  objects.shot4.body:setUserData("false")
+end
+
+function beginContact(a, b, coll)
+  
+  
+  if (a:getUserData() == "shot" and b:getUserData() == "red ship") then
+    objects.redShip.health = objects.redShip.health - 1
+    a:getBody():setUserData("true")
+  elseif (a:getUserData() == "red ship" and b:getUserData() == "shot") then
+    objects.redShip.health = objects.redShip.health - 1
+    b:getBody():setUserData("true")
+  elseif (a:getUserData() == "shot" and b:getUserData() == "blue ship") then
+    objects.blueShip.health = objects.blueShip.health - 1
+    a:getBody():setUserData("true")
+  elseif (a:getUserData() == "blue ship" and b:getUserData() == "shot") then
+    objects.blueShip.health = objects.blueShip.health - 1
+    b:getBody():setUserData("true")
+  end
+end
+ 
+function endContact(a, b, coll)
+ 
+end
+ 
+function preSolve(a, b, coll)
+ 
+end
+ 
+function postSolve(a, b, coll, normalimpulse, tangentimpulse)
+ 
+end
+
+function love.update(dt)
+  
+  shipUpdate(dt)  
+  terrainUpdate(dt)
+  shotUpdate(dt)
+  world:update(dt)
+  
+  if love.keyboard.isDown("up") then --press the up arrow key to set the ball in the air
+    objects.redShip.body:setPosition(650/2, 650/2)
+    objects.redShip.body:setLinearVelocity(0, 0) --we must set the velocity to zero to prevent a potentially large velocity generated by the change in position
+  end
+end
+
+
+function shipUpdate(dt)
+  
+  RedShipUpdate(dt)
+  blueShipUpdate(dt)
+end
+
+function shotUpdate(dt)
+    
+  if (objects.shot1.body:getUserData() == "true") then
+    objects.shot1.body:setPosition(-500, 0)
+    objects.shot1.body:setUserData("false")
+  end
+  if (objects.shot2.body:getUserData() == "true") then
+    objects.shot2.body:setPosition(-500, 0)
+    objects.shot2.body:setUserData("false")
+  end
+  if (objects.shot3.body:getUserData() == "true") then
+    objects.shot3.body:setPosition(-500, 0)
+    objects.shot3.body:setUserData("false")
+  end
+  if (objects.shot4.body:getUserData() == "true") then
+    objects.shot4.body:setPosition(-500, 0)
+    objects.shot4.body:setUserData("false")
+  end
+end
+
+function blueShipUpdate(dt)
+  if love.keyboard.isDown("l") then
+		objects.blueShip.body:setAngle(objects.blueShip.body:getAngle() + objects.blueShip.rotationSpeed)
+    
+    if objects.blueShip.body:getAngle() > (math.pi*2) then
+      objects.blueShip.body:setAngle(0)
+    end
+  end
+  if love.keyboard.isDown("j") then
+		objects.blueShip.body:setAngle(objects.blueShip.body:getAngle() - objects.blueShip.rotationSpeed)
+    
+    if objects.blueShip.body:getAngle() > 0 then
+      objects.blueShip.rotation = (math.pi*2)
+    end
+  end
+  
+  local x = 0
+  local y = 0
+  x,y = angledShipMovement(objects.blueShip.speedSettingValue[objects.blueShip.speedSetting], objects.blueShip.body:getAngle(), dt)
+  objects.blueShip.body:applyForce(y, -x)
+ -- objects.blueShip.x, objects.blueShip.y = angledShipMovement(objects.blueShip.x, objects.blueShip.y, objects.blueShip.speed, objects.blueShip.rotation, dt)
+ 
+ if objects.blueShip.health == 0 then
+   objects.blueShip.body:setPosition(-500, 0)
+  end
+end
+
+function terrainUpdate(dt)
+  x, y = objects.redShip.body:getPosition()
+  x1, y1 = angleCalculate(x, y, 500, 500)
+
+  objects.redShip.body:applyForce(40 * x1, 40 * y1)
+  
+  x, y = objects.blueShip.body:getPosition()
+  x1, y1 = angleCalculate(x, y, 500, 500)
+
+  objects.blueShip.body:applyForce(40 * x1, 40 * y1)
+  
+    x, y = objects.shot1.body:getPosition()
+  x1, y1 = angleCalculate(x, y, 500, 500)
+
+  objects.shot1.body:applyForce(10 * x1, 10 * y1)
+  
+    x, y = objects.shot2.body:getPosition()
+  x1, y1 = angleCalculate(x, y, 500, 500)
+
+  objects.shot2.body:applyForce(10 * x1, 10 * y1)
+  
+    x, y = objects.shot3.body:getPosition()
+  x1, y1 = angleCalculate(x, y, 500, 500)
+
+  objects.shot3.body:applyForce(10 * x1, 10 * y1)
+  
+    x, y = objects.shot4.body:getPosition()
+  x1, y1 = angleCalculate(x, y, 500, 500)
+
+  objects.shot3.body:applyForce(10 * x1, 10 * y1)
+end
+
+function angleCalculate(x1, y1, x2, y2)
+  totalx = x2 + x1
+  totaly = y2 + y1
+   
+  total = totalx + totaly  
+  
+  if total ~= 0 then
+    totalx = totalx / total
+    totaly = totaly / total   
+  elseif total == 0 then
+    totalx = 0
+    totaly = 0
+  end
+
+  if x2 <x1 then
+    totalx = - totalx
+  end
+  if y2 < y1 then
+    totaly = - totaly
+  end
+  
+  return totalx, totaly
+end
+
+function RedShipUpdate(dt)
+    if love.keyboard.isDown("d") then
+		objects.redShip.body:setAngle(objects.redShip.body:getAngle() + objects.redShip.rotationSpeed)
+    
+    if objects.redShip.body:getAngle() > (math.pi*2) then
+      objects.redShip.body:setAngle(0)
+    end
+  end
+  if love.keyboard.isDown("a") then
+		objects.redShip.body:setAngle(objects.redShip.body:getAngle() - objects.redShip.rotationSpeed)
+    
+    if objects.redShip.body:getAngle() > 0 then
+      objects.redShip.rotation = (math.pi*2)
+    end
+  end
+  
+  local x = 0
+  local y = 0
+  x,y = angledShipMovement(objects.redShip.speedSettingValue[objects.redShip.speedSetting], objects.redShip.body:getAngle(), dt)
+  objects.redShip.body:applyForce(y, -x)
+	
+   if objects.blueShip.health == 0 then
+   objects.blueShip.body:setPosition(-500, 0)
+  end
+  
+  if objects.redShip.health == 0 then
+    objects.redShip.body:setPosition(-500, 0)
+  end
+ -- objects.redShip.x, objects.redShip.y = angledShipMovement(objects.redShip.x, objects.redShip.y, objects.redShip.speed, objects.redShip.rotation, dt)
+end
+
+function angledShipMovement(speed, rotation, dt)
+  local x = 0
+  local y = 0  
+  
+  x = (math.cos(rotation) * dt * speed)
+  y =  (math.sin(rotation) * dt * speed)
+  return x, y
+end
+
+function love.draw()
+  love.graphics.draw(background, backgroundQuad, 0, 0)
+  game_screen()
+end
+
+function love.keyreleased(key)
+  
+	if (key == "w" and objects.redShip.speedSetting < 5) then
+      objects.redShip.speedSetting = objects.redShip.speedSetting + 1
+	end
+  if (key == "s" and objects.redShip.speedSetting > 1) then
+      objects.redShip.speedSetting = objects.redShip.speedSetting - 1
+	end
+  	if (key == "i" and objects.blueShip.speedSetting < 5) then
+      objects.blueShip.speedSetting = objects.blueShip.speedSetting + 1
+	end
+  if (key == "k" and objects.blueShip.speedSetting > 1) then
+      objects.blueShip.speedSetting = objects.blueShip.speedSetting - 1
+	end
+  if (key == "q") then
+      objects.redShip.body:setLinearVelocity(0,0)
+      objects.redShip.body:setAngularVelocity(0)
+	end
+  if (key == "u") then
+      objects.blueShip.body:setLinearVelocity(0,0)
+      objects.blueShip.body:setAngularVelocity(0)
+	end
+  if (key == "e") then
+      objects.shot1.body:setPosition(objects.redShip.body:getX() + (40 * math.cos(objects.redShip.body:getAngle())), objects.redShip.body:getY() + (35 * math.sin(objects.redShip.body:getAngle())))
+      objects.shot1.body:setLinearVelocity((500 * math.cos(objects.redShip.body:getAngle())), (500 * math.sin(objects.redShip.body:getAngle())))
+      objects.shot2.body:setPosition(objects.redShip.body:getX() - (55 * math.cos(objects.redShip.body:getAngle())), objects.redShip.body:getY() - (35 * math.sin(objects.redShip.body:getAngle())))
+      objects.shot2.body:setLinearVelocity((-500 * math.cos(objects.redShip.body:getAngle())), -(500 * math.sin(objects.redShip.body:getAngle())))
+	end
+  if (key == "o") then
+      objects.shot3.body:setPosition(objects.blueShip.body:getX() + (40 * math.cos(objects.blueShip.body:getAngle())), objects.blueShip.body:getY() + (35 * math.sin(objects.blueShip.body:getAngle())))
+      objects.shot3.body:setLinearVelocity((500 * math.cos(objects.blueShip.body:getAngle())), (500 * math.sin(objects.blueShip.body:getAngle())))
+      objects.shot4.body:setPosition(objects.blueShip.body:getX() - (55 * math.cos(objects.blueShip.body:getAngle())), objects.blueShip.body:getY() - (35 * math.sin(objects.blueShip.body:getAngle())))
+      objects.shot4.body:setLinearVelocity((-500 * math.cos(objects.blueShip.body:getAngle())), -(500 * math.sin(objects.blueShip.body:getAngle())))
+	end
+end
+
+function game_screen()
+
+  love.graphics.draw(redPlayerImage, objects.redShip.body:getX() + (objects.redShip.width / 2), objects.redShip.body:getY() + (objects.redShip.height / 2), objects.redShip.body:getAngle(), 1, 1 ,objects.redShip.width / 2, (objects.redShip.height / 2))
+  --love.graphics.rectangle("fill", objects.redShip.body:getX(), objects.redShip.body:getY(), 70, 120)
+  love.graphics.draw(bluePlayerImage, objects.blueShip.body:getX() + (objects.blueShip.width / 2), objects.blueShip.body:getY() + (objects.blueShip.height / 2), objects.blueShip.body:getAngle(), 1, 1 ,objects.blueShip.width / 2, (objects.blueShip.height / 2))
+  love.graphics.draw(asteroidImage, objects.asteroid1.body:getX(), objects.asteroid1.body:getY(), objects.asteroid1.body:getAngle(), 1, 1 ,objects.asteroid1.width / 2, (objects.asteroid1.height / 2)) 
+  love.graphics.draw(asteroidImage, objects.asteroid2.body:getX(), objects.asteroid2.body:getY(), objects.asteroid2.body:getAngle(), 1, 1 ,objects.asteroid2.width / 2, (objects.asteroid2.height / 2))
+  love.graphics.draw(asteroidImage, objects.asteroid3.body:getX(), objects.asteroid3.body:getY(), objects.asteroid3.body:getAngle(), 1, 1 ,objects.asteroid3.width / 2, (objects.asteroid3.height / 2))
+  love.graphics.draw(shotImage, objects.shot1.body:getX() + 40, objects.shot1.body:getY() + 50, objects.shot1.body:getAngle(), 1, 1 ,objects.shot1.width / 2, (objects.shot1.height / 2)) 
+  love.graphics.draw(shotImage, objects.shot2.body:getX() + 40, objects.shot2.body:getY() + 50, objects.shot1.body:getAngle(), 1, 1 ,objects.shot1.width / 2, (objects.shot1.height / 2)) 
+  love.graphics.draw(shotImage, objects.shot3.body:getX() + 40, objects.shot3.body:getY() + 50, objects.shot1.body:getAngle(), 1, 1 ,objects.shot1.width / 2, (objects.shot1.height / 2)) 
+  love.graphics.draw(shotImage, objects.shot4.body:getX() + 40, objects.shot4.body:getY() + 50, objects.shot1.body:getAngle(), 1, 1 ,objects.shot1.width / 2, (objects.shot1.height / 2)) 
+  love.graphics.draw(holeImage, 500, 500, 0, 1, 1) 
+  love.graphics.print(objects.blueShip.health, 0, 0)
+  love.graphics.print(objects.redShip.health, 1200, 0)
+  
+  if objects.redShip.health == 0 then
+    love.graphics.print("Blue Ship Wins!", 700, 500)
+  elseif objects.blueShip.health == 0 then
+    love.graphics.print("red Ship Wins!", 700, 500)
+  end
+end
+
+function CheckCollision(x1,y1,w1,h1, x2,y2,w2,h2)
+  return x1 < x2+w2 and
+         x2 < x1+w1 and
+         y1 < y2+h2 and
+         y2 < y1+h1
+end
