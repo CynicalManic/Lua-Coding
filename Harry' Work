@@ -1,0 +1,181 @@
+function love.load()
+  
+
+  background1= love.graphics.newImage("sprites/Clouds1.png")
+  backgroundQuad1 = love.graphics.newQuad(1,1,720/2,1280/2,720/2,1280/2)
+  background1PosY = 0
+  
+  background2 = love.graphics.newImage("sprites/Clouds2.png")
+  backgroundQuad2 = love.graphics.newQuad(1,1,720/2,1280/2,720/2,1280/2)
+  background2PosY = -640
+  
+  charRight = love.graphics.newImage("sprites/CharRight.png")
+  charLeft = love.graphics.newImage("sprites/CharLeft.png")
+  charIdle = love.graphics.newImage("sprites/CharIdle.png")
+  Char = charIdle
+  IsAlive = true
+  
+  --Animation
+  charFrames = {}
+  frameWidth = 17
+  frameHeight = 23
+  totalNumOfFrames = 5 
+  currentFrame = 1
+  desiredDelay = 0.15
+  timePassedSince = 0
+  
+  for frame = 1, totalNumOfFrames do
+      charFrames[frame] = love.graphics.newQuad((frame-1) * frameWidth, 0, frameWidth, frameHeight, Char:getDimensions())
+      end
+  
+  --Player Jump mechanics
+  charPosY =  0  --310
+  charPosX = 180
+  charYVelocity = 0
+  charJumpHeight = -250
+  charGrav = -250
+  charCanJump = true
+  
+  --Platform generation
+   plat = love.graphics.newImage("sprites/Platform.png")
+   platforms = {}
+	
+	for i= 0, 15 do
+		platform = {}
+		platform.width = 43
+		platform.height = 16
+		platform.x = math.random(0, 360)
+		platform.y = math.random(0, 680) + 70
+		table.insert(platforms, platform)
+	end
+  
+  
+  score = 0
+
+end
+
+
+  
+function love.update(dt)
+   
+  
+  if love.keyboard.isDown("a") then
+      charPosX = charPosX - dt * 100
+      Char = charLeft
+  elseif love.keyboard.isDown("d") then
+      charPosX = charPosX + dt * 100
+      Char = charRight
+  else 
+    Char = charIdle
+  end
+  
+  if love.keyboard.isDown("escape") then
+      love.event.quit()
+  end    
+  
+  if (charCanJump == true) then
+   if love.keyboard.isDown("space") then 
+     if (charYVelocity == 0) then
+         charYVelocity = charJumpHeight
+         score = score + 40
+     end
+   end  
+  end
+  
+  if (charYVelocity - 0) then
+    charPosY = charPosY + charYVelocity * dt
+    charYVelocity = charYVelocity - charGrav * dt
+   
+  end
+  
+
+timePassedSince = timePassedSince + dt
+if timePassedSince > desiredDelay then
+    timePassedSince = timePassedSince - desiredDelay
+    
+    currentFrame = currentFrame % totalNumOfFrames + 1
+end
+  
+  		for i,v in ipairs(platforms) do
+			if CheckCollision(charPosX, charPosY, 15, 24, v.x, v.y, 43, 16) then
+         charGround = charPosY
+         charPosY = charPosY
+         charCanJump = true
+         charYVelocity = 0
+			end
+      end
+
+
+if charPosY > 680 then
+ IsAlive = false 
+elseif charPosX < 0 then
+  charPosX = 0
+elseif charPosX > 340 then
+  charPosX = 340
+elseif charPosY < 0 then
+  charPosY = 0
+  charYVelocity = 0
+  charCanJump = false
+end  
+   
+   
+ if IsAlive == true then 
+  for i,v in ipairs(platforms) do
+      v.y = v.y + dt * 50
+      if v.y > 640 then
+        v.y = 0
+        v.x = math.random(0, 300)
+        score = score + 40
+        if CheckCollision(v.x, v.y, 43, 16, v.x, v.y, 43, 16) then
+          v.x = math.random(0, 300)
+          v.y = math.random(-75, 0)
+        end   
+      end  
+    end    
+  end  
+  if IsAlive == true then
+  background1PosY = background1PosY + 30 * dt 
+  background2PosY = background2PosY + 30 * dt 
+  end
+  
+  if background1PosY > 640 then
+    background1PosY = -640
+  end  
+  
+   if background2PosY > 640 then
+    background2PosY = -640
+  end  
+    
+  
+end
+
+
+function love.draw(dt)
+  love.graphics.draw(background1, backgroundQuad1, 0, background1PosY)
+  love.graphics.draw(background2, backgroundQuad2,0, background2PosY)
+  love.graphics.print('Score:', 20, 20)
+  if IsAlive == false then
+  love.graphics.print('You Lose!!!', 150, 320)
+  end
+  
+  love.graphics.print(score, 70, 20)
+  game_screen()
+end
+
+function game_screen() 
+  
+  if IsAlive == true  then
+    love.graphics.draw(Char, charFrames[currentFrame], charPosX, charPosY)
+      
+    for i, v in ipairs(platforms) do
+    love.graphics.draw(plat, v.x, v.y)
+    end  
+  end
+end
+
+function CheckCollision(x1,y1,w1,h1, x2,y2,w2,h2)
+  return x1 < x2+w2 and
+         x2 < x1+w1 and
+         y1 < y2+h2 and
+         y2 < y1+h1
+end
